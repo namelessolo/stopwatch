@@ -1,6 +1,11 @@
 import React, { useReducer, useEffect, useRef } from "react";
 import { Howl } from "howler";
 
+const sound = new Howl({
+  src: ["https://namelessolo.github.io/stopwatch/beep.wav"],
+  // html5: true,
+});
+
 const initialValues = {
   series: "",
   seconds: "",
@@ -30,12 +35,14 @@ const reducer = (state, action) => {
         seconds: action.payload,
       };
     case "OUT_OF_SECONDS":
+      sound.play();
       return {
         ...state,
         series: state.series - 1,
         seconds: state.initialSeconds - 1,
       };
     case "OUT_OF_SERIES":
+      sound.play();
       return {
         ...initialValues,
         series: state.initialSeries,
@@ -56,10 +63,6 @@ const reducer = (state, action) => {
 const App = () => {
   const [state, dispatch] = useReducer(reducer, initialValues);
   const { series, seconds, isRunning, initialSeconds, initialSeries } = state;
-  const sound = new Howl({
-    src: ["http://localhost:3000/stopwatch/beep.wav"],
-    // html5: true,
-  });
 
   const seriesRef = useRef();
   const secondsRef = useRef();
@@ -89,7 +92,6 @@ const App = () => {
         const remainingTime = seconds - 1;
         if (remainingTime < 0 && series === 1) {
           dispatch({ type: "OUT_OF_SERIES" });
-          sound.play();
           clearInterval(timerID);
           return;
         }
