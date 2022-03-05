@@ -1,61 +1,68 @@
-import React, { useEffect, useRef, useReducer } from "react";
+import React, { useReducer, useEffect, useRef } from "react";
+import { Howl } from "howler";
 
-function App() {
-  const initialValues = {
-    series: "",
-    seconds: "",
-    hundredOfSeconds: 0,
-    isRunning: false,
-    initialSeconds: null,
-    initialSeries: null,
-    now: null,
-  };
+const initialValues = {
+  series: "",
+  seconds: "",
+  initialSeries: null,
+  initialSeconds: null,
+  isRunning: false,
+};
 
-  const reducer = (state, action) => {
-    switch (action.type) {
-      case "INPUT_CHANGE":
-        return {
-          ...state,
-          [action.field]: action.payload,
-        };
-      case "START":
-        return {
-          ...state,
-          isRunning: true,
-          initialSeconds: action.initialSeconds,
-          initialSeries: action.initialSeries,
-          now: action.now,
-          seconds: state.seconds--,
-        };
-      case "RUNNING":
-        return {
-          ...state,
-          seconds: Math.floor(action.payload / 1000),
-          hundredOfSeconds: String(Math.floor(action.payload / 10)).slice(-2),
-        };
-      case "OUT_OF_SERIES":
-        return {
-          ...initialValues,
-          seconds: state.initialSeconds,
-          series: state.initialSeries,
-        };
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "INPUT_CHANGE":
+      return {
+        ...state,
+        [action.field]: action.payload,
+      };
+    case "START":
+      return {
+        ...state,
+        seconds: state.seconds - 1,
+        initialSeries: action.initialSeries,
+        initialSeconds: action.initialSeconds,
+        isRunning: true,
+      };
+    case "RUNNING":
+      return {
+        ...state,
+        seconds: action.payload,
+      };
+    case "OUT_OF_SECONDS":
+      return {
+        ...state,
+        series: state.series - 1,
+        seconds: state.initialSeconds - 1,
+      };
+    case "OUT_OF_SERIES":
+      return {
+        ...initialValues,
+        series: state.initialSeries,
+        seconds: state.initialSeconds,
+      };
+    case "PAUSE":
+      return {
+        ...state,
+        isRunning: false,
+      };
+    case "RESET":
+      return initialValues;
+    default:
+      throw new Error("Unsupported case");
+  }
+};
 
-      case "OUT_OF_SECONDS":
-        return {
-          ...state,
-          seconds: state.initialSeconds - 1,
-          series: state.series - 1,
-          now: Date.now(),
-        };
-      default:
-        throw new Error("Unsupported case");
-    }
-  };
-
+const App = () => {
   const [state, dispatch] = useReducer(reducer, initialValues);
-  const { series, seconds, hundredOfSeconds, isRunning, initialSeconds, now } = state;
-  const secondsRef = useRef();
+  const { series, seconds, isRunning, initialSeconds, initialSeries } = state;
+  const sound = new Howl({
+    src: ["http://localhost:3000/stopwatch/beep.wav"],
+    // html5: true,
+  });
+
   const seriesRef = useRef();
+  const secondsRef = useRef();
 
   const inputHandler = (e) => {
     dispatch({ type: "INPUT_CHANGE", field: e.target.id, payload: e.target.value });
@@ -64,31 +71,38 @@ function App() {
   const startHandler = () => {
     dispatch({
       type: "START",
-      initialSeconds: secondsRef.current.value,
-      initialSeries: seriesRef.current.value,
-      now: Date.now(),
+      initialSeries: initialSeries ? initialSeries : seriesRef.current.value,
+      initialSeconds: initialSeconds ? initialSeconds : secondsRef.current.value,
     });
   };
 
+  const pauseHandler = () => {
+    dispatch({ type: "PAUSE" });
+  };
+
+  const resetHandler = () => {
+    dispatch({ type: "RESET" });
+  };
   useEffect(() => {
     if (isRunning) {
-      const timerId = setInterval(() => {
-        const remainingHundredOfSeconds = initialSeconds * 1000 + now - Date.now();
-        if (remainingHundredOfSeconds <= 0 && series === 1) {
+      const timerID = setInterval(() => {
+        const remainingTime = seconds - 1;
+        if (remainingTime < 0 && series === 1) {
           dispatch({ type: "OUT_OF_SERIES" });
-          clearInterval(timerId);
+          sound.play();
+          clearInterval(timerID);
           return;
         }
-        if (remainingHundredOfSeconds <= 0) {
+        if (remainingTime < 0) {
           dispatch({ type: "OUT_OF_SECONDS" });
+          sound.play();
+          return;
         }
-
-        dispatch({ type: "RUNNING", payload: remainingHundredOfSeconds });
-      }, 10);
-      return () => clearInterval(timerId);
+        dispatch({ type: "RUNNING", payload: remainingTime });
+      }, 1000);
+      return () => clearInterval(timerID);
     }
-  }, [isRunning, initialSeconds, now, series]);
-
+  }, [isRunning, seconds, series]);
   return (
     <>
       <div className="flex flex-col bg-teal-500 max-w-xl aspect-square rounded-full justify-center items-center mx-auto">
@@ -101,8 +115,8 @@ function App() {
           maxLength="2"
           value={series}
           onChange={inputHandler}
-          className="w-6 h-6 bg-white"
           ref={seriesRef}
+          className="w-10 h-6 bg-white"
         />
         <label htmlFor="seconds">Seconds</label>
         <input
@@ -112,18 +126,17 @@ function App() {
           max="99"
           value={seconds}
           onChange={inputHandler}
-          className="w-6 h-6 bg-white"
           ref={secondsRef}
+          className="w-10 h-6 bg-white"
         />
-        <div>ELO</div>
-        <div className="w-6 h-6 bg-white">{hundredOfSeconds}</div>
+        <div className="w-10 h-6 bg-white"></div>
         <button onClick={startHandler}>START</button>
-        <button>STOP</button>
-        <button>RESET</button>
+        <button onClick={pauseHandler}>STOP</button>
+        <button onClick={resetHandler}>RESET</button>
       </div>
       <div></div>
     </>
   );
-}
+};
 
 export default App;
