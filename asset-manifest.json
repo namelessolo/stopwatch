@@ -1,13 +1,16 @@
 {
   "files": {
-    "main.css": "/stopwatch/static/css/main.2f432f1f.css",
-    "main.js": "/stopwatch/static/js/main.b115e6d2.js",
+    "main.css": "/stopwatch/static/css/main.b03df78b.css",
+    "main.js": "/stopwatch/static/js/main.8d60b670.js",
     "index.html": "/stopwatch/index.html",
-    "main.2f432f1f.css.map": "/stopwatch/static/css/main.2f432f1f.css.map",
-    "main.b115e6d2.js.map": "/stopwatch/static/js/main.b115e6d2.js.map"
+    "static/media/reset.svg": "/stopwatch/static/media/reset.9c64ce922eaf1f18c552ce53a0993d92.svg",
+    "static/media/pause.svg": "/stopwatch/static/media/pause.770e928469c890cc3fe91e50e98605fe.svg",
+    "static/media/play.svg": "/stopwatch/static/media/play.4f58647ed34b76be9e0b6efb27e92f82.svg",
+    "main.b03df78b.css.map": "/stopwatch/static/css/main.b03df78b.css.map",
+    "main.8d60b670.js.map": "/stopwatch/static/js/main.8d60b670.js.map"
   },
   "entrypoints": [
-    "static/css/main.2f432f1f.css",
-    "static/js/main.b115e6d2.js"
+    "static/css/main.b03df78b.css",
+    "static/js/main.8d60b670.js"
   ]
 }
